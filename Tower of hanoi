@@ -1,0 +1,135 @@
+/*
+ *   Copyright (c) 2024 Emon Thakur
+ *   All rights reserved.
+ */
+#include<iostream>
+#include<math.h>
+#include<thread>
+using namespace std;
+#define green "\033[1;32m"
+#define red "\033[1;31m"
+#define cyan "\033[1;36m"
+#define white "\033[1;37m"
+#define yellow "\033[1;33m"
+#define resetc "\033[1;0m"
+#define bold  "\x1B[1m"
+#define resett  "\x1B[0m"
+
+int a[100],b[100],c[100];
+int aa,bb,cc;
+string s;
+
+void change(char from, char to)
+{
+	int tmp;
+	if(from=='A' && to=='B')
+	{
+		tmp=a[aa];
+		a[aa]=0;
+		aa--;
+		b[++bb]=tmp;
+	}
+	else if(from=='A' && to=='C')
+	{
+		tmp=a[aa];
+		a[aa]=0;
+		aa--;
+		c[++cc]=tmp;
+	}
+	else if(from=='B' && to=='C')
+	{
+		tmp=b[bb];
+		b[bb]=0;
+		bb--;
+		c[++cc]=tmp;
+	}
+	else if(from=='B' && to=='A')
+	{
+		tmp=b[bb];
+		b[bb]=0;
+		bb--;
+		a[++aa]=tmp;
+	}
+	else if(from=='C' && to=='A')
+	{
+		tmp=c[cc];
+		c[cc]=0;
+		--cc;
+		a[++aa]=tmp;
+	}
+	else if(from=='C' && to=='B')
+	{
+		tmp=c[cc];
+		c[cc]=0;
+		--cc;
+		b[++bb]=tmp;
+	}
+}
+
+
+int height,step=0;
+void show()
+{
+	system("cls");
+	for(int i=height;i>0;i--)
+	{
+		cout<<"\t";
+		if(a[i]==0) cout<<"|"<<"\t\t";
+		else cout<<green<<a[i]<<"\t\t"<<resetc;
+
+		if(b[i]==0) cout<<"|"<<"\t\t";
+		else cout<<red<<b[i]<<"\t\t"<<resetc;
+
+		if(c[i]==0) cout<<"|"<<"\t\t"<<endl;
+		else cout<<yellow<<c[i]<<resetc<<endl;
+	}
+	cout<<bold<<"       ____\t      ____\t      ____"<<resett<<endl;
+	cout<<bold<<"\t"<<green<<"A"<<red<<"\t\tB\t\t"<<yellow<<"C\n\n"<<resett<<resetc<<endl;
+}
+
+void toh(int n,char A, char C, char B)
+{
+    if(n==1)
+	{
+		change(A,C);
+		this_thread::sleep_for(2000ms);
+		//printf("press enter to continue: ");
+		//getline(cin,s);
+		show();
+		printf("%sstep %s%d: %c -> %c \n\n",red,resetc,++step,A,C);
+		return;
+	}
+	toh(n-1,A,B,C);
+	change(A,C);
+	this_thread::sleep_for(2000ms);
+	//printf("press enter to continue: ");
+	//getline(cin,s);
+	show();
+	printf("%sstep%s %d: %c -> %c \n\n",red,resetc,++step,A,C);
+	toh(n-1,B,C,A);
+}
+
+int main()
+{
+	system("cls");
+	cout<<"Enter the number of disks: ";
+	int n; cin>>n;
+	getline(cin,s);
+	height=n+1;
+	aa=n,bb=0,cc=0;
+	for(int i=1;i<=n;i++) a[n-i+1]=i;
+
+	char from='A',to='C',use='B';
+	show();
+	toh(n,from,to,use);
+
+	cout<<green<<"Congratulations, you are done\n\n"<<resetc<<endl;
+	cout<<red<<"Total number of operations: "<<resetc<<pow(2,n)-1<<endl<<endl;
+
+	point_1:
+	cout<<"Return to main ?(y/n): ";
+	cin>>s;
+	if(s=="y"||s=="Y") main();
+	else if(s=="n" || s=="N") return 0;
+	else goto point_1;
+}
