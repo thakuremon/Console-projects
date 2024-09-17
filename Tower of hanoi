@@ -3,8 +3,11 @@
  *   All rights reserved.
  */
 #include<iostream>
+#include<string.h>
 #include<math.h>
 #include<thread>
+#include<cctype>
+#include<algorithm>
 using namespace std;
 #define green "\033[1;32m"
 #define red "\033[1;31m"
@@ -15,121 +18,207 @@ using namespace std;
 #define bold  "\x1B[1m"
 #define resett  "\x1B[0m"
 
-int a[100],b[100],c[100];
-int aa,bb,cc;
-string s;
+int towerA[101],towerB[101],towerC[101];
+int topA,topB,topC;
+int height=0,step=0;
+string emptyString;
 
-void change(char from, char to)
+void changeDisk(char from, char to)
 {
 	int tmp;
 	if(from=='A' && to=='B')
 	{
-		tmp=a[aa];
-		a[aa]=0;
-		aa--;
-		b[++bb]=tmp;
+		tmp=towerA[topA];
+		towerA[topA]=0;
+		topA--;
+		towerB[++topB]=tmp;
 	}
 	else if(from=='A' && to=='C')
 	{
-		tmp=a[aa];
-		a[aa]=0;
-		aa--;
-		c[++cc]=tmp;
+		tmp=towerA[topA];
+		towerA[topA]=0;
+		topA--;
+		towerC[++topC]=tmp;
 	}
 	else if(from=='B' && to=='C')
 	{
-		tmp=b[bb];
-		b[bb]=0;
-		bb--;
-		c[++cc]=tmp;
+		tmp=towerB[topB];
+		towerB[topB]=0;
+		topB--;
+		towerC[++topC]=tmp;
 	}
 	else if(from=='B' && to=='A')
 	{
-		tmp=b[bb];
-		b[bb]=0;
-		bb--;
-		a[++aa]=tmp;
+		tmp=towerB[topB];
+		towerB[topB]=0;
+		topB--;
+		towerA[++topA]=tmp;
 	}
 	else if(from=='C' && to=='A')
 	{
-		tmp=c[cc];
-		c[cc]=0;
-		--cc;
-		a[++aa]=tmp;
+		tmp=towerC[topC];
+	    towerC[topC]=0;
+		--topC;
+		towerA[++topA]=tmp;
 	}
 	else if(from=='C' && to=='B')
 	{
-		tmp=c[cc];
-		c[cc]=0;
-		--cc;
-		b[++bb]=tmp;
+		tmp=towerC[topC];
+		towerC[topC]=0;
+		--topC;
+		towerB[++topB]=tmp;
 	}
 }
 
 
-int height,step=0;
-void show()
+void showTowers()
 {
 	system("cls");
 	for(int i=height;i>0;i--)
 	{
 		cout<<"\t";
-		if(a[i]==0) cout<<"|"<<"\t\t";
-		else cout<<green<<a[i]<<"\t\t"<<resetc;
+		if(towerA[i]==0) cout<<"|"<<"\t\t";
+		else cout<<green<<towerA[i]<<"\t\t"<<resetc;
 
-		if(b[i]==0) cout<<"|"<<"\t\t";
-		else cout<<red<<b[i]<<"\t\t"<<resetc;
+		if(towerB[i]==0) cout<<"|"<<"\t\t";
+		else cout<<red<<towerB[i]<<"\t\t"<<resetc;
 
-		if(c[i]==0) cout<<"|"<<"\t\t"<<endl;
-		else cout<<yellow<<c[i]<<resetc<<endl;
+		if(towerC[i]==0) cout<<"|"<<"\t\t"<<endl;
+		else cout<<yellow<<towerC[i]<<resetc<<endl;
 	}
 	cout<<bold<<"       ____\t      ____\t      ____"<<resett<<endl;
 	cout<<bold<<"\t"<<green<<"A"<<red<<"\t\tB\t\t"<<yellow<<"C\n\n"<<resett<<resetc<<endl;
 }
 
-void toh(int n,char A, char C, char B)
+void solutionOfTOH(int NumberOfDisks,char A, char C, char B, bool automatic)
 {
-    if(n==1)
+    if(NumberOfDisks==1)
 	{
-		change(A,C);
-		this_thread::sleep_for(2000ms);
-		//printf("press enter to continue: ");
-		//getline(cin,s);
-		show();
+		changeDisk(A,C);
+		if(automatic) this_thread::sleep_for(2000ms);
+		else 
+		{
+	    	printf("press enter to continue: ");
+	    	getline(cin,emptyString);
+		}
+		showTowers();
 		printf("%sstep %s%d: %c -> %c \n\n",red,resetc,++step,A,C);
 		return;
 	}
-	toh(n-1,A,B,C);
-	change(A,C);
-	this_thread::sleep_for(2000ms);
-	//printf("press enter to continue: ");
-	//getline(cin,s);
-	show();
+	solutionOfTOH(NumberOfDisks-1 , A , B , C , automatic);
+	changeDisk(A,C);
+	if(automatic) this_thread::sleep_for(2000ms);
+	else 
+	{
+	    printf("press enter to continue: ");
+	    getline(cin,emptyString);
+	}
+	showTowers();
 	printf("%sstep%s %d: %c -> %c \n\n",red,resetc,++step,A,C);
-	toh(n-1,B,C,A);
+	solutionOfTOH(NumberOfDisks-1 , B , C , A, automatic);
+}
+
+void resetTowers()
+{
+	for(int i=0;i<=100;i++)
+	{
+		towerA[i] = 0;
+		towerB[i] = 0;
+		towerC[i] = 0;
+	}
+	height = 0;
+	step = 0;
+}
+
+bool validMove(char from, char to)
+{
+	if(from == to) return false;
+	if(from != 'A' && from != 'B' && from != 'C') return false;
+	if(to != 'A' && to != 'B' && to != 'C') return false;
+	return true;
+}
+
+bool gameOver(int disk)
+{
+	return disk == topC;
+}
+
+void playGame()
+{
+	system("cls");
+	cout<<"Enter the number of disks: ";
+	int disk; cin>> disk;
+	//getline(cin,emptyString);
+	height=disk+1;
+	topA=disk,topB=0,topC=0;
+	for(int i=1;i<=disk;i++) towerA[disk-i+1]=i;
+
+	string nextMove;
+	int moveCount = 0;
+	while(true)
+	{
+		system("cls");
+		showTowers();
+		cout<<"moves : "<<moveCount<<endl;
+		cout<<"your next move(ex: A to B): ";
+		getline(cin,nextMove);
+
+        char from = toupper(nextMove[0]);
+		char to = toupper(nextMove[nextMove.size()-1]);
+		if(validMove(from,to))
+		{
+			++moveCount;
+			changeDisk(from,to);
+			if(gameOver(disk))
+			{
+				system("cls");
+				showTowers();
+				cout<<green<<bold<<"congratulations, you are done\n"<<resetc<<resett<<endl;
+				cout<<"Moves required : "<<moveCount<<endl;
+				cout<<"Minimum possible moves for "<<disk<<" disks is : "<<pow(2,disk)-1<<"\n\n"; 
+				break;
+			}
+		}
+		else continue;
+	}
+	cout<<"press enter to continue: "<<endl;
+	getline(cin,emptyString);
+}
+
+void seeSolution(bool automatic)
+{
+	system("cls");
+	cout<<"Enter the number of disks: ";
+	int disk; cin>> disk;
+	getline(cin,emptyString);
+	height=disk+1;
+	topA=disk,topB=0,topC=0;
+	for(int i=1;i<=disk;i++) towerA[disk-i+1]=i;
+
+	char from='A',to='C',use='B';
+	showTowers();
+	solutionOfTOH(disk , from , to , use, automatic);
+
+	cout<<red<<"Total number of operations: "<<resetc<<pow(2,disk)-1<<endl<<endl;
+
+	cout<<"press enter to go to main: ";
+	getline(cin,emptyString);
 }
 
 int main()
 {
 	system("cls");
-	cout<<"Enter the number of disks: ";
-	int n; cin>>n;
-	getline(cin,s);
-	height=n+1;
-	aa=n,bb=0,cc=0;
-	for(int i=1;i<=n;i++) a[n-i+1]=i;
+	cout<<"Chose an option : \n\n";
+	cout<<"1. Play game\n";
+	cout<<"2. See solution(automatic)\n";
+	cout<<"3. See solution(manual)\n\n";
 
-	char from='A',to='C',use='B';
-	show();
-	toh(n,from,to,use);
+	cout<<"enter a number (1/2/3): ";
+	int userChoice; cin >> userChoice;
 
-	cout<<green<<"Congratulations, you are done\n\n"<<resetc<<endl;
-	cout<<red<<"Total number of operations: "<<resetc<<pow(2,n)-1<<endl<<endl;
-
-	point_1:
-	cout<<"Return to main ?(y/n): ";
-	cin>>s;
-	if(s=="y"||s=="Y") main();
-	else if(s=="n" || s=="N") return 0;
-	else goto point_1;
+	if(userChoice == 1) playGame();
+	else if(userChoice == 2) seeSolution(true);
+	else if(userChoice == 3) seeSolution(false);
+	resetTowers();
+	main();
 }
